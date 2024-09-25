@@ -15,5 +15,5 @@ program and a usage synopsis.
 ## Contributing
 
 This is not an open source project. I've made the repository public mainly to
-evidence my skills in Bash, shell-scripting fundamentals, and workflow
-automation.
+evidence my skills in Bash, common GNU utilities, shell-scripting fundamentals,
+and workflow automation.
