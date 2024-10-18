@@ -74,9 +74,7 @@ terminate() {
         tput setaf 1 2> /dev/null   # Set foreground color to red
         echo -e ${error_msg} >&2
         tput sgr0 2> /dev/null      # Turn off all attributes
-        exit ${exit_status}
-    }
-    echo -e ${error_msg} >&2
+    } || echo -e ${error_msg} >&2
     exit ${exit_status}
 }
 
