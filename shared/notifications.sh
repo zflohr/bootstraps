@@ -1,7 +1,22 @@
-# Functions for printing notifications to stdout and stderr.
-#
 # Author: Zachary Flohr
+#
+# Functions for printing terminal-dependent messages.
 
+########################################################################
+# Print a colorized message to stdout or stderr.
+# Arguments:
+#   1: An integer, which indicates to which data stream to send the
+#      message: zero for stdout, non-zero for stderr.
+#   2: The foreground color for the message. The color may be a name or
+#      an integer. If an integer, it will be the argument to the
+#      "setaf" terminal capability. 
+#   3: A message to print.
+# Outputs:
+#   Writes $3 to stdout if $1 is zero.
+#   Writes $3 to stderr if $1 is non-zero.
+# Returns:
+#   0
+########################################################################
 print_message() {
     local -r MESSAGE="\n${3}"
     local -i FOREGROUND_COLOR=7
