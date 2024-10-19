@@ -1,4 +1,6 @@
 # Functions for printing notifications to stdout and stderr.
+#
+# Author: Zachary Flohr
 
 print_message() {
     local -r MESSAGE="\n${3}"
