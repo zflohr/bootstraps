@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# Author: Zachary Flohr
 
 readonly LLVM_VERSION=18
 declare -ar LLVM_PACKAGES=(clang lldb lld)
