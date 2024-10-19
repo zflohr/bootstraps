@@ -67,14 +67,7 @@ terminate() {
             error_msg="Something went wrong. Terminating..."
         ;;
     esac
-    tput -V &> /dev/null && {
-        tput sgr0 2> /dev/null      # Turn off all attributes
-        tput rev 2> /dev/null       # Turn on reverse video mode
-        tput bold 2> /dev/null      # Turn on bold mode
-        tput setaf 1 2> /dev/null   # Set foreground color to red
-        echo -e ${error_msg} >&2
-        tput sgr0 2> /dev/null      # Turn off all attributes
-    } || echo -e ${error_msg} >&2
+    print_message 1 "red" "${error_msg}"
     exit ${exit_status}
 }
 
@@ -168,13 +161,7 @@ print_apt_progress() {
             progress_msg+="\nPurging the following packages: ${purge_pkgs[*]}"
         ;;
     esac
-    tput -V &> /dev/null && {
-        tput sgr0 2> /dev/null      # Turn off all attributes
-        tput bold 2> /dev/null      # Turn on bold mode
-        tput setaf 6 2> /dev/null   # Set foreground color to cyan
-        echo -e ${progress_msg}
-        tput sgr0 2> /dev/null      # Turn off all attributes
-    } || echo -e ${progress_msg}
+    print_message 0 "cyan" "${progress_msg}"
 }
 
 print_source_list_progress() {
@@ -200,13 +187,7 @@ print_source_list_progress() {
             progress_msg="\nRemoved ${PPA_DIR}${LLVM_SOURCE_FILE}"
         ;;
     esac
-    tput -V &> /dev/null && {
-        tput sgr0 2> /dev/null      # Turn off all attributes
-        tput bold 2> /dev/null      # Turn on bold mode
-        tput setaf 6 2> /dev/null   # Set foreground color to cyan
-        echo -e ${progress_msg}
-        tput sgr0 2> /dev/null      # Turn off all attributes
-    } || echo -e ${progress_msg}
+    print_message 0 "cyan" "${progress_msg}"
 }
 
 install_llvm() {
@@ -262,6 +243,7 @@ purge_llvm() {
 
 main() {
     local install purge replace
+    . ../shared/notifications.sh
     check_binaries; parse_args $*; check_root_user; define_constants
     unset -f usage check_binaries parse_args define_constants \
         check_root_user check_conflicting_args
