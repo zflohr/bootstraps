@@ -72,7 +72,12 @@ terminate() {
             exit_status=${2}
         ;;
         *)
-            error_msg="Something went wrong. Terminating..."
+            case "${1}" in
+                'git')
+                    error_msg="\"git ${2}\" failed!\nTerminating..."
+                    exit_status=${3}
+                ;;
+            esac
         ;;
     esac
     print_message 1 "red" "${error_msg}"
