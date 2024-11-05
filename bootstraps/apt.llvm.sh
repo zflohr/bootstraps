@@ -97,6 +97,7 @@ check_root_user() {
 }
 
 define_constants() {
+    readonly ARCH=$(dpkg --print-architecture)
     readonly BASE_URL="https://apt.llvm.org"
     readonly PPA_DIR="/etc/apt/sources.list.d/"
     readonly GPG_DIR="/usr/share/keyrings/"
@@ -106,7 +107,7 @@ define_constants() {
     readonly CODENAME="${BASH_REMATCH[1]}"
     readonly LLVM_SOURCE_FILE="llvm.list"
     readonly TYPE="deb"
-    readonly OPTIONS="[arch=amd64 signed-by=${GPG_DIR}${LLVM_GPG_BASENAME}]"
+    readonly OPTIONS="[arch=${ARCH} signed-by=${GPG_DIR}${LLVM_GPG_BASENAME}]"
     readonly URI="${BASE_URL}/${CODENAME}/"
     readonly SUITE="llvm-toolchain-${CODENAME}-${LLVM_VERSION}"
     readonly COMPONENTS="main"
