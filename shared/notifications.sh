@@ -39,7 +39,7 @@ print_message() {
     (( ${1} )) && tput rev 2> /dev/null             # Turn on reverse video mode
     tput bold 2> /dev/null                          # Turn on bold mode
     tput setaf ${foreground_color} 2> /dev/null     # Set foreground color
-    (( ${1} )) && echo -e ${MESSAGE} >&2 || echo -e ${MESSAGE}
+    (( ${1} )) && echo -e "${MESSAGE}" >&2 || echo -e "${MESSAGE}"
     tput sgr0 2> /dev/null                          # Turn off all attributes
     return 0
 }
@@ -49,8 +49,8 @@ terminate() {
     local -i exit_status=1
     case "${FUNCNAME[1]}" in
         'check_binaries')
-            error_msg="You must install the following \
-                tools to run this script: ${1}"
+            error_msg="You must install the following tools "
+            error_msg+="to run this script: ${1}"
         ;;
         'check_conflicting_args')
             error_msg="Illegal combination of options: ${1}"
@@ -63,8 +63,8 @@ terminate() {
             exit_status=${1}
         ;;
         'download_public_key')
-            error_msg="Could not download the OpenPGP \
-                public key from ${1}\nTerminating..."
+            error_msg="Could not download the OpenPGP public key from ${1}"
+            error_msg+="\nTerminating..."
             exit_status=${2}
         ;;
         'apt_get')
