@@ -115,11 +115,11 @@ define_constants() {
 }
 
 print_apt_progress() {
-    local progress_msg="\nRunning apt-get ${1}..."
+    local progress_msg="Running apt-get ${1}..."
     case "${1}" in
         'install')
-            progress_msg+="\nInstalling the following packages: \
-                ${INSTALL_PKGS[*]}"
+            progress_msg+="\nInstalling the following packages: "
+            progress_msg+="${INSTALL_PKGS[*]}"
         ;;
         'purge')
             progress_msg+="\nPurging the following packages: ${PURGE_PKGS[*]}"
@@ -132,23 +132,23 @@ print_source_list_progress() {
     local progress_msg
     case "${1}" in
         'key found')
-            progress_msg="\nFound OpenPGP public key in ${GPG_DIR}"
+            progress_msg="Found OpenPGP public key in ${GPG_DIR}"
         ;;
         'no key')
-            progress_msg="\nAdded OpenPGP public key from \
-                ${BASE_URL}${GPG_PATH} to ${GPG_DIR}"
+            progress_msg="Added OpenPGP public key from "
+            progress_msg+="${BASE_URL}${GPG_PATH} to ${GPG_DIR}"
         ;;
         'remove key')
-            progress_msg="\nRemoved OpenPGP public key from ${GPG_DIR}"
+            progress_msg="Removed OpenPGP public key from ${GPG_DIR}"
         ;;
         'source found')
-            progress_msg="\nFound entry in ${PPA_DIR}${LLVM_SOURCE_FILE}"
+            progress_msg="Found entry in ${PPA_DIR}${LLVM_SOURCE_FILE}"
         ;;
         'no source')
-            progress_msg="\nAdded entry to ${PPA_DIR}${LLVM_SOURCE_FILE}"
+            progress_msg="Added entry to ${PPA_DIR}${LLVM_SOURCE_FILE}"
         ;;
         'remove source')
-            progress_msg="\nRemoved ${PPA_DIR}${LLVM_SOURCE_FILE}"
+            progress_msg="Removed ${PPA_DIR}${LLVM_SOURCE_FILE}"
         ;;
     esac
     print_message 0 "cyan" "${progress_msg}"
