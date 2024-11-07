@@ -41,7 +41,7 @@ check_binaries() {
     for binary in "${needed_binaries[@]}"; do
         which ${binary} &> /dev/null || missing_binaries+=($binary)
     done
-    [ ${#missing_binaries[@]} -eq 0 ] || terminate "${missing_binaries[*]}"
+    ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[*]}"
 }
 
 check_conflicting_args() {
@@ -89,11 +89,11 @@ parse_args() {
         esac
         check_conflicting_args
     done
-    [ $# -eq 0 ] || { usage >&2 && exit 1; }
+    ! (( $# )) || { usage >&2 && exit 1; }
 }
 
 check_root_user() {
-    [ ${EUID} -eq 0 ] || terminate
+    ! (( ${EUID} )) || terminate
 }
 
 define_constants() {
