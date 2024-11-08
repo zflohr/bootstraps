@@ -35,10 +35,11 @@ USAGE
 }
 
 check_binaries() {
-    local -a needed_binaries missing_binaries=()
+    local -a missing_binaries=()
+    local -ar NEEDED_BINARIES=(apt-get awk dpkg getopt
+                               gpg grep lsb_release sed wget)
     which which &> /dev/null || terminate "which"
-    needed_binaries=(apt-get awk dpkg getopt gpg grep lsb_release sed wget)
-    for binary in "${needed_binaries[@]}"; do
+    for binary in "${NEEDED_BINARIES[@]}"; do
         which ${binary} &> /dev/null || missing_binaries+=($binary)
     done
     ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[*]}"
