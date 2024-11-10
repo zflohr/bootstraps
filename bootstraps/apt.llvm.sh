@@ -45,54 +45,6 @@ check_binaries() {
     ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[*]}"
 }
 
-check_conflicting_args() {
-    local conflicting_opts
-    if [ ${replace} ]; then {
-        [ ${install} ] && conflicting_opts="-r|--replace, -i|--install"
-    } || {
-        [ -z ${purge} ] || conflicting_opts="-r|--replace, -p|--purge"
-    }
-    fi
-    [ -z "${conflicting_opts}" ] || terminate "${conflicting_opts}"
-}
-
-parse_args() {
-    local temp
-    local -i getopt_exit_status
-    temp=$(getopt -o 'hipr' -l 'help,install,purge,replace' \
-        -n $(basename "${0}") -- "$@")
-    getopt_exit_status=$?
-    [ ${getopt_exit_status} -ne 0 ] && terminate ${getopt_exit_status}
-    eval set -- "${temp}"
-    unset temp
-    while true; do
-        case "$1" in
-            '-h'|'--help')
-                usage
-                exit 0
-            ;;
-            '-i'|'--install')
-                [ -z ${install} ] && readonly install="yes"
-                shift
-            ;;
-            '-p'|'--purge')
-                [ -z ${purge} ] && readonly purge="yes"
-                shift
-            ;;
-            '-r'|'--replace')
-                [ -z ${replace} ] && readonly replace="yes"
-                shift
-            ;;
-            '--')
-                shift
-                break
-            ;;
-        esac
-        check_conflicting_args
-    done
-    ! (( $# )) || { usage >&2 && exit 1; }
-}
-
 check_root_user() {
     ! (( ${EUID} )) || terminate
 }
@@ -218,15 +170,16 @@ purge_llvm() {
 }
 
 main() {
-    local install purge replace
     . ../shared/notifications.sh
-    check_binaries; parse_args $*; check_root_user; define_constants
-    unset -f usage check_binaries parse_args define_constants \
-        check_root_user check_conflicting_args
-    if [ ${install} ]; then
-        [ -z ${purge} ] && install_llvm || { purge_llvm && install_llvm; }
+    . ../shared/parameters.sh
+    check_binaries; parse_bootstrap_params $* "usage"; check_root_user;
+    define_constants
+    unset -f usage check_binaries parse_bootstrap_params define_constants \
+        check_root_user check_conflicting_bootstrap_params
+    if [ ${INSTALL} ]; then
+        [ -z ${PURGE} ] && install_llvm || { purge_llvm && install_llvm; }
     else
-        purge_llvm; [ ${purge} ] || install_llvm
+        purge_llvm; [ ${PURGE} ] || install_llvm
     fi
 }
 
