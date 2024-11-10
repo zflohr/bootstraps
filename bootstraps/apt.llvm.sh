@@ -173,9 +173,8 @@ main() {
     . ../shared/notifications.sh
     . ../shared/parameters.sh
     check_binaries; parse_bootstrap_params $* "usage"; check_root_user;
-    define_constants
-    unset -f usage check_binaries parse_bootstrap_params define_constants \
-        check_root_user check_conflicting_bootstrap_params
+    define_constants; unset_parameters_module
+    unset -f usage check_binaries define_constants check_root_user
     if [ ${INSTALL} ]; then
         [ -z ${PURGE} ] && install_llvm || { purge_llvm && install_llvm; }
     else
