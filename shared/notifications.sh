@@ -52,13 +52,13 @@ terminate() {
             error_msg="You must install the following tools "
             error_msg+="to run this script: ${1}"
         ;;
-        'check_conflicting_args')
+        'check_conflicting_bootstrap_params')
             error_msg="Illegal combination of options: ${1}"
         ;;
         'check_root_user')
             error_msg="This script must be run as root!"
         ;;
-        'parse_args')
+        'parse_bootstrap_params')
             error_msg="Terminating..."
             exit_status=${1}
         ;;
