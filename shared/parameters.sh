@@ -47,3 +47,8 @@ parse_bootstrap_params() {
     done
     ! (( $# )) || { eval ${USAGE} >&2 && exit 1; }
 }
+
+unset_parameters_module() {
+    unset -f check_conflicting_bootstrap_params parse_bootstrap_params \
+        unset_parameters_module
+}
