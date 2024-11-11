@@ -34,10 +34,13 @@ Other options:
 USAGE
 }
 
+needed_binaries() {
+    echo "apt-get awk dpkg gpg grep lsb_release sed wget"
+}
+
 check_binaries() {
     local -a missing_binaries=()
-    local -ar NEEDED_BINARIES=(apt-get awk dpkg getopt
-                               gpg grep lsb_release sed wget)
+    local -ar NEEDED_BINARIES=($*)
     which which &> /dev/null || terminate "which"
     for binary in "${NEEDED_BINARIES[@]}"; do
         which ${binary} &> /dev/null || missing_binaries+=($binary)
@@ -170,10 +173,10 @@ purge_llvm() {
 }
 
 main() {
-    . ../shared/notifications.sh
-    . ../shared/parameters.sh
-    check_binaries; parse_bootstrap_params $* "usage"; check_root_user;
-    define_constants; unset_parameters_module
+    . ../shared/notifications.sh; check_binaries $(needed_binaries)
+    . ../shared/parameters.sh; check_binaries $(needed_binaries)
+    parse_bootstrap_params $* "usage"; unset_parameters_module
+    check_root_user; define_constants
     unset -f usage check_binaries define_constants check_root_user
     if [ ${INSTALL} ]; then
         [ -z ${PURGE} ] && install_llvm || { purge_llvm && install_llvm; }
