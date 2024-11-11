@@ -83,4 +83,3 @@ terminate() {
     print_message 1 "red" "${error_msg}"
     exit ${exit_status}
 }
-
