@@ -48,7 +48,11 @@ parse_bootstrap_params() {
     ! (( $# )) || { eval ${USAGE} >&2 && exit 1; }
 }
 
+needed_binaries() {
+    echo "getopt"
+}
+
 unset_parameters_module() {
     unset -f check_conflicting_bootstrap_params parse_bootstrap_params \
-        unset_parameters_module
+        needed_binaries unset_parameters_module
 }
