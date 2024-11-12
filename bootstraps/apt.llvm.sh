@@ -59,7 +59,7 @@ define_constants() {
     readonly GPG_DIR="/usr/share/keyrings/"
     readonly GPG_PATH="/llvm-snapshot.gpg.key"
     readonly LLVM_GPG_BASENAME="llvm.gpg"
-    [[ $(lsb_release -c) =~ [[:blank:]]([[:alpha:]]+)$ ]]
+    [[ $(lsb_release --codename) =~ [[:blank:]]([[:alpha:]]+)$ ]]
     readonly CODENAME="${BASH_REMATCH[1]}"
     readonly LLVM_SOURCE_FILE="llvm.list"
     readonly TYPE="deb"
@@ -111,9 +111,10 @@ print_source_list_progress() {
 }
 
 download_public_key() {
-    wget -qO ${GPG_DIR}${LLVM_GPG_BASENAME} ${BASE_URL}${GPG_PATH} &&
+    wget --quiet --output-document="${GPG_DIR}${LLVM_GPG_BASENAME}" \
+            ${BASE_URL}${GPG_PATH} &&
         cat ${GPG_DIR}${LLVM_GPG_BASENAME} \
-            | gpg --yes -o ${GPG_DIR}${LLVM_GPG_BASENAME} --dearmor &&
+            | gpg --yes --output "${GPG_DIR}${LLVM_GPG_BASENAME}" --dearmor &&
         chmod 0644 ${GPG_DIR}${LLVM_GPG_BASENAME} &&
         print_source_list_progress "no key" ||
         {
@@ -127,15 +128,17 @@ apt_get() {
     case "${FUNCNAME[1]}" in
         'install_llvm')
             print_apt_progress "update";
-            apt-get -q update || terminate "update" $?
+            apt-get --quiet update || terminate "update" $?
             print_apt_progress "install";
-            apt-get -yq install "${INSTALL_PKGS[@]}" || terminate "install" $?
-            print_apt_progress "autoremove"; apt-get -yq autoremove
+            apt-get --quiet --yes install "${INSTALL_PKGS[@]}" ||
+                terminate "install" $?
+            print_apt_progress "autoremove"; apt-get --quiet --yes autoremove
         ;;
         'purge_llvm')
-            print_apt_progress "purge"; apt-get -yq purge "${PURGE_PKGS[@]}"
-            print_apt_progress "autoremove"; apt-get -yq autoremove
-            print_apt_progress "autoclean"; apt-get -yq autoclean
+            print_apt_progress "purge";
+            apt-get --quiet --yes purge "${PURGE_PKGS[@]}"
+            print_apt_progress "autoremove"; apt-get --quiet --yes autoremove
+            print_apt_progress "autoclean"; apt-get --quiet --yes autoclean
         ;;
     esac
 }
@@ -148,7 +151,8 @@ install_llvm() {
     else
         download_public_key
     fi
-    grep -qsF "${REPO}" "${PPA_DIR}${LLVM_SOURCE_FILE}" &&
+    grep --quiet --no-messages --fixed-strings "${REPO}" \
+            "${PPA_DIR}${LLVM_SOURCE_FILE}" &&
         print_source_list_progress "source found" ||
         {
             bash -c "echo ${REPO} >> ${PPA_DIR}${LLVM_SOURCE_FILE}"
@@ -161,8 +165,9 @@ purge_llvm() {
     local regexp='-[[:digit:]]\\+[[:blank:]]\\+install$\\|'
     regexp=$(echo "${LLVM_PACKAGES[*]}" | sed "s/\([a-z]\+\)/^\1${regexp}/g" \
         | sed 's/ //g')
-    local -ar PURGE_PKGS=($(dpkg --get-selections | grep -o "${regexp}" \
-        | awk '{ print $1 }' | paste -s -d ' '))
+    local -ar PURGE_PKGS=($(dpkg --get-selections | \
+        grep --only-matching "${regexp}" | awk '{ print $1 }' | \
+        paste --serial --delimiters=" "))
     [ -f "${PPA_DIR}${LLVM_SOURCE_FILE}" ] &&
         rm ${PPA_DIR}${LLVM_SOURCE_FILE} &&
         print_source_list_progress "remove source"
