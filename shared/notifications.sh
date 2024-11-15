@@ -83,3 +83,21 @@ terminate() {
     print_message 1 "red" "${error_msg}"
     exit ${exit_status}
 }
+
+print_apt_progress() {
+    local progress_msg="Running apt-get ${1}..."
+    case "${1}" in
+        'build-dep')
+            progress_msg+="\nSatisfying build dependencies "
+            progress_msg+="for the following packages: ${2}"
+        ;;
+        'install')
+            progress_msg+="\nInstalling the following packages: ${2}"
+        ;;
+        'purge')
+            progress_msg+="\nPurging the following packages: ${2}"
+        ;;
+    esac
+    print_message 0 "cyan" "${progress_msg}"
+}
+
