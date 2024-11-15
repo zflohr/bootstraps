@@ -70,20 +70,6 @@ define_constants() {
     readonly REPO="${TYPE} ${OPTIONS} ${URI} ${SUITE} ${COMPONENTS}"
 }
 
-print_apt_progress() {
-    local progress_msg="Running apt-get ${1}..."
-    case "${1}" in
-        'install')
-            progress_msg+="\nInstalling the following packages: "
-            progress_msg+="${INSTALL_PKGS[*]}"
-        ;;
-        'purge')
-            progress_msg+="\nPurging the following packages: ${PURGE_PKGS[*]}"
-        ;;
-    esac
-    print_message 0 "cyan" "${progress_msg}"
-}
-
 print_source_list_progress() {
     local progress_msg
     case "${1}" in
@@ -127,15 +113,15 @@ download_public_key() {
 apt_get() {
     case "${FUNCNAME[1]}" in
         'install_llvm')
-            print_apt_progress "update";
+            print_apt_progress "update"
             apt-get --quiet update || terminate "update" $?
-            print_apt_progress "install";
+            print_apt_progress "install" "${INSTALL_PKGS[*]}"
             apt-get --quiet --yes install "${INSTALL_PKGS[@]}" ||
                 terminate "install" $?
             print_apt_progress "autoremove"; apt-get --quiet --yes autoremove
         ;;
         'purge_llvm')
-            print_apt_progress "purge";
+            print_apt_progress "purge" "${PURGE_PKGS[*]}"
             apt-get --quiet --yes purge "${PURGE_PKGS[@]}"
             print_apt_progress "autoremove"; apt-get --quiet --yes autoremove
             print_apt_progress "autoclean"; apt-get --quiet --yes autoclean
