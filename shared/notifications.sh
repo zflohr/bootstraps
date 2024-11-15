@@ -67,9 +67,18 @@ terminate() {
             error_msg+="\nTerminating..."
             exit_status=${2}
         ;;
+        'download_source')
+            error_msg="Could not download ${1} from ${2}"
+            error_msg+="\nTerminating..."
+            exit_status=${3}
+        ;;
         'apt_get')
             error_msg="\"apt-get ${1}\" failed!\nTerminating..."
             exit_status=${2}
+        ;;
+        'check_distributor_id')
+            error_msg="This script is not compatible with the "
+            error_msg+="following distribution: ${1}"
         ;;
         *)
             case "${1}" in
