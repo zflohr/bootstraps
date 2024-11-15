@@ -5,7 +5,7 @@
 # Refer here for installing build dependencies:
 # https://devguide.python.org/getting-started/setup-building/index.html#build-dependencies
 
-readonly PYTHON_VERSION=3.12.5
+readonly PYTHON_VERSION=3.13.0
 
 usage() {
     cat <<- USAGE
@@ -34,7 +34,7 @@ USAGE
 }
 
 needed_binaries() {
-    echo "apt-get awk dpkg grep"
+    echo "apt-get awk curl dpkg grep lsb_release sed"
 }
 
 check_binaries() {
@@ -47,36 +47,95 @@ check_binaries() {
     ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[*]}"
 }
 
+check_distributor_id() {
+    [[ $(lsb_release --id) =~ [[:blank:]]([[:alpha:]]+)$ ]]
+    case "${BASH_REMATCH[1]}" in
+        'Ubuntu')
+            readonly DIST_REPO_URI="archive.ubuntu.com/ubuntu"
+        ;;
+        'Debian')
+            readonly DIST_REPO_URI="deb.debian.org/debian"
+        ;;
+        *)
+            terminate "${BASH_REMATCH[1]}"
+        ;;
+    esac
+}
+
 check_root_user() {
     ! (( ${EUID} )) || terminate
 }
 
 get_clang_version() {
-    local regexp='^clang-[[:digit:]]\+[[:blank:]]\+install$'
-    clang_versions=($(dpkg --get-selections | grep "${regexp}" \
-        | awk '{ print $1 }' | sort -d))
+    local -r REGEXP='^clang-[[:digit:]]\+[[:blank:]]\+install$'
+    clang_versions=($(dpkg --get-selections | grep "${REGEXP}" \
+        | awk '{ print $1 }' | sort --dictionary-order))
     (( ${#clang_versions[*]} )) || check_binaries "clang"
 }
 
 define_constants() {
+    readonly SOURCE_LIST="/etc/apt/sources.list"
+    [[ $(lsb_release --codename) =~ [[:blank:]]([[:alpha:]]+)$ ]]
+    readonly CODENAME="${BASH_REMATCH[1]}"
     readonly BASE_URL="https://www.python.org/ftp/python"
     readonly ARCHIVE=Python-${PYTHON_VERSION}.tgz
+    readonly BUILD_DEP=(python3)
 }
 
-build_python() {
+enable_source_packages() {
+    local regexp="deb-src.+${DIST_REPO_URI}/? "
+    regexp+="${CODENAME} ([[:alpha:]]* )*main.*"
+    local -i line_number=$(grep --perl-regexp --line-number --max-count=1 \
+        ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
+    (( ${line_number} )) &&
+        sed --regexp-extended --in-place \
+                "${line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST} || {
+            regexp=$(echo ${regexp} \
+                | sed --regexp-extended 's|deb-src\.\+|deb(\.\+)|')
+            line_number=$(grep --perl-regexp --line-number --max-count=1 \
+                ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
+            local -r OPTIONS=$(sed --quiet --regexp-extended \
+                "${line_number}s|.*${regexp}|\1|p" ${SOURCE_LIST})
+            local -r SOURCE="deb-src${OPTIONS}${DIST_REPO_URI} ${CODENAME} main"
+            sed --in-place "${line_number}a\\${SOURCE}" ${SOURCE_LIST}
+        }
+}
+
+download_source() {
+    curl --fail --silent ${BASE_URL}/${PYTHON_VERSION}/${ARCHIVE} \
+        --output ${ARCHIVE} || {
+            local -ir CURL_EXIT_STATUS=$?
+            terminate "${ARCHIVE}" "${BASE_URL}/${PYTHON_VERSION}" \
+                "${CURL_EXIT_STATUS}"
+        }
+}
+
+apt_get() {
+    case "${FUNCNAME[1]}" in
+        'install_python')
+            print_apt_progress "update"
+            apt-get --quiet update || terminate "update" $?
+            print_apt_progress "build-dep" "${BUILD_DEP[*]}"
+            apt-get build-dep "${BUILD_DEP[@]}" || terminate "build-dep" $?
+        ;;
+        'purge_python')
+        ;;
+    esac
+}
+
+install_python() {
     local -a clang_versions
     get_clang_version
     CC=$(which "${clang_versions[-1]}")
-    echo $CC
+    enable_source_packages
+
+    #download_source
+    #apt_get
 }
 
 build_pythons() {
-    get_clang_version
-    curl ${BASE_URL}/${PYTHON_VERSION}/${ARCHIVE} -o ${ARCHIVE}
-    apt-get update
 
     # Install dependencies needed to build Python natively.
-    apt-get build-dep python3
     apt-get install pkg-config
 
     # Do a debug build if the current environment is not "production" or
@@ -108,10 +167,15 @@ build_pythons() {
 main() {
     . ../shared/notifications.sh; check_binaries $(needed_binaries)
     . ../shared/parameters.sh; check_binaries $(needed_binaries)
-    define_constants; parse_bootstrap_params $* "usage";
+    check_distributor_id; define_constants; parse_bootstrap_params $* "usage"
     unset_parameters_module; check_root_user
-    build_python
-    unset -f usage check_binaries define_constants check_root_user
+    unset -f check_binaries check_distributor_id \
+        check_root_user define_constants usage
+    if [ ${INSTALL} ]; then
+        [ -z ${PURGE} ] && install_python || { purge_python && install_python; }
+    else
+        purge_python; [ ${PURGE} ] || install_python
+    fi
 }
 
 main $*
