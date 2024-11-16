@@ -70,39 +70,14 @@ define_constants() {
     readonly REPO="${TYPE} ${OPTIONS} ${URI} ${SUITE} ${COMPONENTS}"
 }
 
-print_source_list_progress() {
-    local progress_msg
-    case "${1}" in
-        'key found')
-            progress_msg="Found OpenPGP public key in ${GPG_DIR}"
-        ;;
-        'no key')
-            progress_msg="Added OpenPGP public key from "
-            progress_msg+="${BASE_URL}${GPG_PATH} to ${GPG_DIR}"
-        ;;
-        'remove key')
-            progress_msg="Removed OpenPGP public key from ${GPG_DIR}"
-        ;;
-        'source found')
-            progress_msg="Found entry in ${PPA_DIR}${LLVM_SOURCE_FILE}"
-        ;;
-        'no source')
-            progress_msg="Added entry to ${PPA_DIR}${LLVM_SOURCE_FILE}"
-        ;;
-        'remove source')
-            progress_msg="Removed ${PPA_DIR}${LLVM_SOURCE_FILE}"
-        ;;
-    esac
-    print_message 0 "cyan" "${progress_msg}"
-}
-
 download_public_key() {
     wget --quiet --output-document="${GPG_DIR}${LLVM_GPG_BASENAME}" \
             ${BASE_URL}${GPG_PATH} &&
         cat ${GPG_DIR}${LLVM_GPG_BASENAME} \
             | gpg --yes --output "${GPG_DIR}${LLVM_GPG_BASENAME}" --dearmor &&
         chmod 0644 ${GPG_DIR}${LLVM_GPG_BASENAME} &&
-        print_source_list_progress "no key" ||
+        print_public_key_progress "no key" "${BASE_URL}${GPG_PATH}" \
+            "${GPG_DIR}" ||
         {
             local -ir WGET_EXIT_STATUS=$? &&
             rm ${GPG_DIR}${LLVM_GPG_BASENAME} &&
@@ -133,16 +108,18 @@ install_llvm() {
     local -ar INSTALL_PKGS=($(echo "${LLVM_PACKAGES[@]}" \
         | sed --regexp-extended "s/([a-z]+)/\1-${LLVM_VERSION}/g"))
     if [ -f "${GPG_DIR}${LLVM_GPG_BASENAME}" ]; then
-        print_source_list_progress "key found"
+        print_public_key_progress "key found" "${GPG_DIR}"
     else
         download_public_key
     fi
     grep --quiet --no-messages --fixed-strings "${REPO}" \
             "${PPA_DIR}${LLVM_SOURCE_FILE}" &&
-        print_source_list_progress "source found" ||
+        print_source_list_progress "source found" \
+            "${PPA_DIR}${LLVM_SOURCE_FILE}" ||
         {
             bash -c "echo ${REPO} >> ${PPA_DIR}${LLVM_SOURCE_FILE}"
-            print_source_list_progress "no source"
+            print_source_list_progress "no source" \
+                "${PPA_DIR}${LLVM_SOURCE_FILE}"
         }
     apt_get
 }
@@ -155,10 +132,11 @@ purge_llvm() {
         grep --perl-regexp --only-matching "${regexp}" | awk '{ print $1 }'))
     [ -f "${PPA_DIR}${LLVM_SOURCE_FILE}" ] &&
         rm ${PPA_DIR}${LLVM_SOURCE_FILE} &&
-        print_source_list_progress "remove source"
+        print_source_list_progress "remove source" \
+            "${PPA_DIR}${LLVM_SOURCE_FILE}"
     [ -f "${GPG_DIR}${LLVM_GPG_BASENAME}" ] &&
         rm ${GPG_DIR}${LLVM_GPG_BASENAME} &&
-        print_source_list_progress "remove key"
+        print_public_key_progress "remove key" "${GPG_DIR}"
     ! (( ${#PURGE_PKGS[@]} )) || apt_get
 }
 
