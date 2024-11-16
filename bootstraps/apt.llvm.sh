@@ -131,7 +131,7 @@ apt_get() {
 
 install_llvm() {
     local -ar INSTALL_PKGS=($(echo "${LLVM_PACKAGES[@]}" \
-        | sed "s/\([a-z]\+\)/\1-${LLVM_VERSION}/g"))
+        | sed --regexp-extended "s/([a-z]+)/\1-${LLVM_VERSION}/g"))
     if [ -f "${GPG_DIR}${LLVM_GPG_BASENAME}" ]; then
         print_source_list_progress "key found"
     else
@@ -148,12 +148,11 @@ install_llvm() {
 }
 
 purge_llvm() {
-    local regexp='-[[:digit:]]\\+[[:blank:]]\\+install$\\|'
-    regexp=$(echo "${LLVM_PACKAGES[*]}" | sed "s/\([a-z]\+\)/^\1${regexp}/g" \
-        | sed 's/ //g')
+    local regexp='-[[:digit:]]+[[:blank:]]+install$|'
+    regexp=$(echo "${LLVM_PACKAGES[*]}" \
+        | sed --regexp-extended "s/([a-z]+)/^\1${regexp}/g" | sed 's/ //g')
     local -ar PURGE_PKGS=($(dpkg --get-selections | \
-        grep --only-matching "${regexp}" | awk '{ print $1 }' | \
-        paste --serial --delimiters=" "))
+        grep --perl-regexp --only-matching "${regexp}" | awk '{ print $1 }'))
     [ -f "${PPA_DIR}${LLVM_SOURCE_FILE}" ] &&
         rm ${PPA_DIR}${LLVM_SOURCE_FILE} &&
         print_source_list_progress "remove source"
