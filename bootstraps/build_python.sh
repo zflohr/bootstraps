@@ -87,9 +87,11 @@ enable_source_packages() {
     regexp+="${CODENAME} ([[:alpha:]]* )*main.*"
     local -i line_number=$(grep --perl-regexp --line-number --max-count=1 \
         ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
+    print_source_list_progress "enable source" "${SOURCE_LIST}"
     (( ${line_number} )) &&
         sed --regexp-extended --in-place \
-                "${line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST} || {
+            "${line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST} ||
+        {
             regexp=$(echo ${regexp} \
                 | sed --regexp-extended 's|deb-src\.\+|deb(\.\+)|')
             line_number=$(grep --perl-regexp --line-number --max-count=1 \
@@ -103,7 +105,8 @@ enable_source_packages() {
 
 download_source() {
     curl --fail --silent ${BASE_URL}/${PYTHON_VERSION}/${ARCHIVE} \
-        --output ${ARCHIVE} || {
+            --output ${ARCHIVE} ||
+        {
             local -ir CURL_EXIT_STATUS=$?
             terminate "${ARCHIVE}" "${BASE_URL}/${PYTHON_VERSION}" \
                 "${CURL_EXIT_STATUS}"
