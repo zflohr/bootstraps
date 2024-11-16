@@ -110,3 +110,34 @@ print_apt_progress() {
     print_message 0 "cyan" "${progress_msg}"
 }
 
+print_source_list_progress() {
+    local progress_msg
+    case "${1}" in
+        'source found')
+            progress_msg="Found entry in ${2}"
+        ;;
+        'no source')
+            progress_msg="Added entry to ${2}"
+        ;;
+        'remove source')
+            progress_msg="Removed ${2}"
+        ;;
+    esac
+    print_message 0 "cyan" "${progress_msg}"
+}
+
+print_public_key_progress() {
+    local progress_msg
+    case "${1}" in
+        'key found')
+            progress_msg="Found OpenPGP public key in ${2}"
+        ;;
+        'no key')
+            progress_msg="Added OpenPGP public key from ${2} to ${3}"
+        ;;
+        'remove key')
+            progress_msg="Removed OpenPGP public key from ${2}"
+        ;;
+    esac
+    print_message 0 "cyan" "${progress_msg}"
+}
