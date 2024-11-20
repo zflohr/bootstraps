@@ -31,6 +31,9 @@ print_message() {
         'gold')
             foreground_color=11
         ;;
+        'yellow')
+            foreground_color=3
+        ;;
         [[:digit:]]*)
             foreground_color=${2}
         ;;
