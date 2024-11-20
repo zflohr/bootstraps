@@ -79,7 +79,11 @@ define_constants() {
     readonly CODENAME="${BASH_REMATCH[1]}"
     readonly BASE_URL="https://www.python.org/ftp/python"
     readonly ARCHIVE=Python-${PYTHON_VERSION}.tgz
-    readonly BUILD_DEP=(python3)
+    readonly BUILD_DEP=(python3 build-essential gdb lcov pkg-config libbz2-dev
+                        libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev
+                        libncurses5-dev libreadline6-dev libsqlite3-dev
+                        libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+                        libmpdec-dev)
 }
 
 enable_source_packages() {
