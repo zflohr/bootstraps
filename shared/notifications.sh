@@ -148,3 +148,16 @@ print_public_key_progress() {
     esac
     print_message 0 "cyan" "${progress_msg}"
 }
+
+print_build_progress() {
+    local progress_msg
+    case "${1}" in
+        'fetch')
+            progress_msg="Fetching ${2} from ${3}"
+        ;;
+        'extract')
+            progress_msg="Uncompressing ${2}, and extracting files..."
+        ;;
+    esac
+    print_message 0 "cyan" "${progress_msg}"
+}
