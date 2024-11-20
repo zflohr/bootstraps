@@ -15,7 +15,7 @@ Summary:
     Purge Python, and/or install from source using the Clang compiler.
 
     During installation, a gzip-compressed tarball is downloaded from
-    ${BASE_URL}
+    ${BASE_URL}/
 
 Package management options:
     -p | --purge    purge all locally installed versions of Python
@@ -107,43 +107,57 @@ enable_source_packages() {
         }
 }
 
-download_source() {
-    curl --fail --silent ${BASE_URL}/${PYTHON_VERSION}/${ARCHIVE} \
-            --output ${ARCHIVE} ||
-        {
-            local -ir CURL_EXIT_STATUS=$?
-            terminate "${ARCHIVE}" "${BASE_URL}/${PYTHON_VERSION}" \
-                "${CURL_EXIT_STATUS}"
-        }
-}
-
 apt_get() {
     case "${FUNCNAME[1]}" in
         'install_python')
+            local message
+            local -i exit_status
             print_apt_progress "update"
             apt-get --quiet update || terminate "update" $?
-            print_apt_progress "build-dep" "${BUILD_DEP[*]}"
-            apt-get build-dep "${BUILD_DEP[@]}" || terminate "build-dep" $?
+            print_apt_progress "build-dep" "${BUILD_DEP[0]}"
+            apt-get --quiet --yes build-dep "${BUILD_DEP[0]}" \
+                || terminate "build-dep" $?
+            print_apt_progress "install" "${BUILD_DEP[*]:1}"
+            for package in "${BUILD_DEP[@]:1}"; do
+                apt-get --quiet --yes install ${package} 2> stderr.tmp ||
+                    {
+                        exit_status=$?
+                        grep "Unable to locate package ${package}" stderr.tmp &&
+                        message="${package} not found. Skipping.\n" &&
+                        print_message 0 "yellow" "${message}" ||
+                        terminate "install" "${exit_status}"
+                    }
+            done
+            rm stderr.tmp
+            print_apt_progress "autoremove"; apt-get --quiet --yes autoremove
         ;;
         'purge_python')
         ;;
     esac
 }
 
+download_source() {
+    print_build_progress "fetch" "${ARCHIVE}" "${BASE_URL}/${PYTHON_VERSION}/"
+    curl --fail --silent ${BASE_URL}/${PYTHON_VERSION}/${ARCHIVE} \
+            --output ${ARCHIVE} ||
+        {
+            local -ir CURL_EXIT_STATUS=$?
+            terminate "${ARCHIVE}" "${BASE_URL}/${PYTHON_VERSION}/" \
+                "${CURL_EXIT_STATUS}"
+        }
+    print_build_progress "extract" "${ARCHIVE}"
+    tar --extract --file=${ARCHIVE} --gunzip; rm ${ARCHIVE}
+}
+
 install_python() {
     local -a clang_versions
     get_clang_version
     CC=$(which "${clang_versions[-1]}")
-    enable_source_packages
-
-    #download_source
-    #apt_get
+    enable_source_packages; apt_get; download_source
+    unset -f enable_source_packages apt_get download_source
 }
 
 build_pythons() {
-
-    # Install dependencies needed to build Python natively.
-    apt-get install pkg-config
 
     # Do a debug build if the current environment is not "production" or
     # "test", i.e., the current environment is "development" or "local".
