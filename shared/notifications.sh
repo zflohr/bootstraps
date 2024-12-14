@@ -125,9 +125,16 @@ print_source_list_progress() {
         'remove source')
             progress_msg="Removed ${2}"
         ;;
-        'enable source')
-            progress_msg="Enabling deb-src type entry in ${2} to "
-            progress_msg+="fetch source archives..."
+        'enable deb-src')
+            progress_msg="Found disabled deb-src type entry in ${2}"
+            progress_msg+="\nEnabling to fetch source archives..."
+        ;;
+        'deb-src')
+            progress_msg="Found enabled deb-src type entry in ${2}"
+        ;;
+        'no deb-src')
+            progress_msg="No deb-src type entry found in ${2}"
+            progress_msg+="\nAdding to fetch source archives..."
         ;;
     esac
     print_message 0 "cyan" "${progress_msg}"
