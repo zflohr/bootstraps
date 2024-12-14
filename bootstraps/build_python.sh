@@ -160,8 +160,6 @@ download_source() {
 }
 
 configure_python() {
-    # Do a debug build if the current environment is not "production" or
-    # "test", i.e., the current environment is "development" or "local".
     local -a options=(
         --prefix=/usr/local
         --exec-prefix=/usr/local
