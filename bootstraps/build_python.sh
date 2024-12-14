@@ -160,37 +160,24 @@ download_source() {
 }
 
 configure_python() {
-
     # Do a debug build if the current environment is not "production" or
     # "test", i.e., the current environment is "development" or "local".
-    if [[ ${ENVIRONMENT} != "production" ]] && [[ ${ENVIRONMENT} != "test" ]]; then
-        ./configure \
-            CC="$(which clang-${clang_versions[-1]})" \
-            CPP="$(which clang-cpp-${clang_versions[-1]})" \
-            CXX="$(which clang++-${clang_versions[-1]})" \
-            CFLAGS="-std=c11" \
-            LLVM_AR="$(which llvm-ar-${clang_versions[-1]})" \
-            LLVM_PROFDATA="$(which llvm-profdata-${clang_versions[-1]})" \
-            --prefix=/usr/local \
-            --exec-prefix=/usr/local \
-            --with-ensurepip=upgrade \
-            --enable-optimizations \
-            --with-lto=thin \
-            --with-pydebug
-    else
-        ./configure \
-            CC="$(which clang-${clang_versions[-1]})" \
-            CPP="$(which clang-cpp-${clang_versions[-1]})" \
-            CXX="$(which clang++-${clang_versions[-1]})" \
-            CFLAGS="-std=c11" \
-            LLVM_AR="$(which llvm-ar-${clang_versions[-1]})" \
-            LLVM_PROFDATA="$(which llvm-profdata-${clang_versions[-1]})" \
-            --prefix=/usr/local \
-            --exec-prefix=/usr/local \
-            --with-ensurepip=upgrade \
-            --enable-optimizations \
-            --with-lto=thin
-    fi
+    local -a options=(
+        --prefix=/usr/local
+        --exec-prefix=/usr/local
+        --with-ensurepip=upgrade
+        --enable-optimizations
+        --with-lto=thin)
+    [[ ${ENVIRONMENT} != "production" ]] && [[ ${ENVIRONMENT} != "test" ]] &&
+        options+=(--with-pydebug)
+    ./configure \
+        CC="$(which clang-${clang_versions[-1]})" \
+        CPP="$(which clang-cpp-${clang_versions[-1]})" \
+        CXX="$(which clang++-${clang_versions[-1]})" \
+        CFLAGS="-std=c11" \
+        LLVM_AR="$(which llvm-ar-${clang_versions[-1]})" \
+        LLVM_PROFDATA="$(which llvm-profdata-${clang_versions[-1]})" \
+        ${options[@]}
     #make
     #make test
 }
