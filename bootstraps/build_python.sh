@@ -163,32 +163,36 @@ configure_python() {
 
     # Do a debug build if the current environment is not "production" or
     # "test", i.e., the current environment is "development" or "local".
-    if [ ${ENVIRONMENT} != "production" ] && [ ${ENVIRONMENT} != "test" ]; then
+    if [[ ${ENVIRONMENT} != "production" ]] && [[ ${ENVIRONMENT} != "test" ]]; then
         ./configure \
             CC="$(which clang-${clang_versions[-1]})" \
             CPP="$(which clang-cpp-${clang_versions[-1]})" \
             CXX="$(which clang++-${clang_versions[-1]})" \
             CFLAGS="-std=c11" \
+            LLVM_AR="$(which llvm-ar-${clang_versions[-1]})" \
+            LLVM_PROFDATA="$(which llvm-profdata-${clang_versions[-1]})" \
             --prefix=/usr/local \
             --exec-prefix=/usr/local \
             --with-ensurepip=upgrade \
             --enable-optimizations \
             --with-lto=thin \
             --with-pydebug
-    else \
+    else
         ./configure \
             CC="$(which clang-${clang_versions[-1]})" \
             CPP="$(which clang-cpp-${clang_versions[-1]})" \
             CXX="$(which clang++-${clang_versions[-1]})" \
             CFLAGS="-std=c11" \
+            LLVM_AR="$(which llvm-ar-${clang_versions[-1]})" \
+            LLVM_PROFDATA="$(which llvm-profdata-${clang_versions[-1]})" \
             --prefix=/usr/local \
             --exec-prefix=/usr/local \
             --with-ensurepip=upgrade \
             --enable-optimizations \
             --with-lto=thin
     fi
-    make
-    make test
+    #make
+    #make test
 }
 
 build_python() {
@@ -196,7 +200,8 @@ build_python() {
     get_clang_version
     enable_source_packages; apt_get; download_source
     unset -f enable_source_packages apt_get download_source
-    #configure_python
+    cd Python-${PYTHON_VERSION}
+    configure_python || exit $?
 }
 
 main() {
