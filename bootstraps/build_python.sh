@@ -90,27 +90,36 @@ define_constants() {
 enable_source_packages() {
     local regexp="deb-src.+${DIST_REPO_URI}/? "
     regexp+="${CODENAME} ([[:alpha:]]* )*main.*"
-    local -i line_number=$(grep --perl-regexp --line-number --max-count=1 \
-        ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
-    print_source_list_progress "enable source" "${SOURCE_LIST}"
-    (( ${line_number} )) &&
-        sed --regexp-extended --in-place \
-            "${line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST} ||
-        {
-            regexp=$(echo ${regexp} \
-                | sed --regexp-extended 's|deb-src\.\+|deb(\.\+)|')
-            line_number=$(grep --perl-regexp --line-number --max-count=1 \
-                ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
-            local -r OPTIONS=$(sed --quiet --regexp-extended \
-                "${line_number}s|.*${regexp}|\1|p" ${SOURCE_LIST})
-            local -r SOURCE="deb-src${OPTIONS}${DIST_REPO_URI} ${CODENAME} main"
-            sed --in-place "${line_number}a\\${SOURCE}" ${SOURCE_LIST}
-        }
+    local entry=$(grep --perl-regexp --line-number --max-count=1 \
+        "^([[:blank:]]|#)*${regexp}" ${SOURCE_LIST})
+    local -i line_number=$(echo ${entry} | cut --delimiter=: --fields=1)
+    if (( ${line_number} )); then
+        entry=$(echo ${entry} \
+            | sed --regexp-extended 's/^[[:digit:]]+:(.*)/\1/')
+        if $(echo ${entry} \
+                | grep --perl-regexp --quiet "^[[:blank:]]*#.*${regexp}"); then
+            print_source_list_progress "enable deb-src" "${SOURCE_LIST}"
+            sed --regexp-extended --in-place \
+                "${line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST}
+        else
+            print_source_list_progress "deb-src" "${SOURCE_LIST}"
+        fi
+    else
+        print_source_list_progress "no deb-src" "${SOURCE_LIST}"
+        regexp=$(echo ${regexp} \
+            | sed --regexp-extended 's|deb-src\.\+|deb(\.\+)|')
+        line_number=$(grep --perl-regexp --line-number --max-count=1 \
+            ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
+        local -r OPTIONS=$(sed --quiet --regexp-extended \
+            "${line_number}s|.*${regexp}|\1|p" ${SOURCE_LIST})
+        local -r SOURCE="deb-src${OPTIONS}${DIST_REPO_URI} ${CODENAME} main"
+        sed --in-place "${line_number}a\\${SOURCE}" ${SOURCE_LIST}
+    fi
 }
 
 apt_get() {
     case "${FUNCNAME[1]}" in
-        'install_python')
+        'build_python')
             local message
             local -i exit_status
             print_apt_progress "update"
