@@ -159,40 +159,44 @@ download_source() {
     tar --extract --file=${ARCHIVE} --gunzip; rm ${ARCHIVE}
 }
 
-install_python() {
-    local -a clang_versions
-    get_clang_version
-    CC=$(which "${clang_versions[-1]}")
-    enable_source_packages; apt_get; download_source
-    unset -f enable_source_packages apt_get download_source
-}
-
-build_pythons() {
+configure_python() {
 
     # Do a debug build if the current environment is not "production" or
     # "test", i.e., the current environment is "development" or "local".
     if [ ${ENVIRONMENT} != "production" ] && [ ${ENVIRONMENT} != "test" ]; then
         ./configure \
-            CC=$(get_clang_version) \
+            CC="$(which clang-${clang_versions[-1]})" \
+            CPP="$(which clang-cpp-${clang_versions[-1]})" \
+            CXX="$(which clang++-${clang_versions[-1]})" \
             CFLAGS="-std=c11" \
             --prefix=/usr/local \
             --exec-prefix=/usr/local \
             --with-ensurepip=upgrade \
             --enable-optimizations \
             --with-lto=thin \
-            --with-pydebug;
+            --with-pydebug
     else \
         ./configure \
-            CC=${clang_version} \
+            CC="$(which clang-${clang_versions[-1]})" \
+            CPP="$(which clang-cpp-${clang_versions[-1]})" \
+            CXX="$(which clang++-${clang_versions[-1]})" \
             CFLAGS="-std=c11" \
             --prefix=/usr/local \
             --exec-prefix=/usr/local \
             --with-ensurepip=upgrade \
             --enable-optimizations \
-            --with-lto=thin;
+            --with-lto=thin
     fi
     make
     make test
+}
+
+build_python() {
+    local -a clang_versions
+    get_clang_version
+    enable_source_packages; apt_get; download_source
+    unset -f enable_source_packages apt_get download_source
+    #configure_python
 }
 
 main() {
@@ -200,12 +204,11 @@ main() {
     . ../shared/parameters.sh; check_binaries $(needed_binaries)
     check_distributor_id; define_constants; parse_bootstrap_params $* "usage"
     unset_parameters_module; check_root_user
-    unset -f check_binaries check_distributor_id \
-        check_root_user define_constants usage
+    unset -f check_distributor_id check_root_user define_constants usage
     if [ ${INSTALL} ]; then
-        [ -z ${PURGE} ] && install_python || { purge_python && install_python; }
+        [ -z ${PURGE} ] && build_python || { purge_python && build_python; }
     else
-        purge_python; [ ${PURGE} ] || install_python
+        purge_python; [ ${PURGE} ] || build_python
     fi
 }
 
