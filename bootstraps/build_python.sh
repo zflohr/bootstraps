@@ -34,7 +34,7 @@ USAGE
 }
 
 needed_binaries() {
-    echo "apt-get awk curl dpkg grep lsb_release sed"
+    echo "apt-get curl dpkg grep lsb_release sed"
 }
 
 check_binaries() {
@@ -67,9 +67,10 @@ check_root_user() {
 }
 
 get_clang_version() {
-    local -r REGEXP='^clang-[[:digit:]]\+[[:blank:]]\+install$'
-    clang_versions=($(dpkg --get-selections | grep "${REGEXP}" \
-        | awk '{ print $1 }' | sort --dictionary-order))
+    local -r REGEXP='^clang-([[:digit:]]+)[[:blank:]].*'
+    clang_versions=($(dpkg --get-selections \
+        | sed --quiet --regexp-extended "s/${REGEXP}/\1/p" \
+        | sort --numeric-sort))
     (( ${#clang_versions[*]} )) || check_binaries "clang"
 }
 
