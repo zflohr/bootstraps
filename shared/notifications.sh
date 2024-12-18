@@ -83,10 +83,19 @@ terminate() {
             error_msg="This script is not compatible with the "
             error_msg+="following distribution: ${1}"
         ;;
+        'check_matching_package_versions')
+            error_msg="Could not find matching versions for the "
+            error_msg+="following packages: ${*:1}\nTerminating..."
+        ;;
         *)
             case "${1}" in
                 'git')
                     error_msg="\"git ${2}\" failed!\nTerminating..."
+                    exit_status=${3}
+                ;;
+                'configure')
+                    error_msg="Something went wrong during the configuration "
+                    error_msg+="of ${2} source code!\nTerminating..."
                     exit_status=${3}
                 ;;
             esac
@@ -164,6 +173,9 @@ print_build_progress() {
         ;;
         'extract')
             progress_msg="Uncompressing ${2}, and extracting files..."
+        ;;
+        'configure')
+            progress_msg="Running configuration script for ${2} source code..."
         ;;
     esac
     print_message 0 "cyan" "${progress_msg}"
