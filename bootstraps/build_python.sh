@@ -168,25 +168,53 @@ configure_python() {
         --with-lto=thin)
     [[ ${ENVIRONMENT} != "production" ]] && [[ ${ENVIRONMENT} != "test" ]] &&
         options+=(--with-pydebug)
+    print_build_progress "configure" "python"
     ./configure \
-        CC="$(which clang-${clang_versions[-1]})" \
-        CPP="$(which clang-cpp-${clang_versions[-1]})" \
-        CXX="$(which clang++-${clang_versions[-1]})" \
+        CC="$(which clang-${clang_llvm_version})" \
+        CPP="$(which clang-cpp-${clang_llvm_version})" \
+        CXX="$(which clang++-${clang_llvm_version})" \
         CFLAGS="-std=c11" \
-        LLVM_AR="$(which llvm-ar-${clang_versions[-1]})" \
-        LLVM_PROFDATA="$(which llvm-profdata-${clang_versions[-1]})" \
-        ${options[@]}
+        LLVM_AR="$(which llvm-ar-${clang_llvm_version})" \
+        LLVM_PROFDATA="$(which llvm-profdata-${clang_llvm_version})" \
+        ${options[@]} || terminate "configure" "python" $?
     #make
     #make test
 }
 
+binary_search() {
+    local -ar ARRAY=(${@:1:$#-1})
+    local -ir VAL=${@: -1}
+    local -i lower=0
+    upper=${#ARRAY[*]}-1
+    while [[ lower -le upper ]]; do
+        mid=(lower+upper)/2
+        [[ ${ARRAY[mid]} -eq ${VAL} ]] && return 0
+        [[ ${ARRAY[mid]} -lt ${VAL} ]] && lower=mid+1 || upper=mid-1
+    done
+    return 1
+}
+
+check_matching_package_versions() {
+    local -i mid
+    local -i upper=${#LLVM_VERSIONS[*]}-1
+    for (( i=-1; ${#CLANG_VERSIONS[*]} + i + 1; i-- )); do
+        binary_search ${LLVM_VERSIONS[@]:0:upper+1} ${CLANG_VERSIONS[i]}
+        ! (( ${?} )) && clang_llvm_version=${CLANG_VERSIONS[i]} && return
+    done
+    terminate "clang" "llvm"
+}
+
 build_python() {
-    local -a clang_versions
-    get_clang_version
+    local -ar LLVM_VERSIONS=($(get_package_versions llvm))
+    local -ar CLANG_VERSIONS=($(get_package_versions clang))
+    local -i clang_llvm_version
+    (( ${#LLVM_VERSIONS[*]} )) || check_binaries "llvm"
+    (( ${#CLANG_VERSIONS[*]} )) || check_binaries "clang"
+    check_matching_package_versions
     enable_source_packages; apt_get; download_source
     unset -f enable_source_packages apt_get download_source
     cd Python-${PYTHON_VERSION}
-    configure_python || exit $?
+    configure_python
 }
 
 main() {
