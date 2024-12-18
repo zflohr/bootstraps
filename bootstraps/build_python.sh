@@ -66,12 +66,12 @@ check_root_user() {
     ! (( ${EUID} )) || terminate
 }
 
-get_clang_version() {
-    local -r REGEXP='^clang-([[:digit:]]+)[[:blank:]].*'
-    clang_versions=($(dpkg --get-selections \
+get_package_versions() {
+    local -r REGEXP="^${1}-([[:digit:]]+)[[:blank:]].*"
+    local -r PACKAGE_VERSIONS=($(dpkg --get-selections \
         | sed --quiet --regexp-extended "s/${REGEXP}/\1/p" \
         | sort --numeric-sort))
-    (( ${#clang_versions[*]} )) || check_binaries "clang"
+    echo ${PACKAGE_VERSIONS[@]}
 }
 
 define_constants() {
