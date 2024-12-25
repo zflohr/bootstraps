@@ -168,6 +168,10 @@ apt_get() {
         ;;
         'purge_python')
         ;;
+        'restore_source_package_settings')
+            print_apt_progress "update"
+            apt-get --quiet update || terminate "update" $?
+        ;;
     esac
 }
 
