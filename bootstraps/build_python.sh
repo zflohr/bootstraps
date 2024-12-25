@@ -75,6 +75,7 @@ get_package_versions() {
 }
 
 define_constants() {
+    readonly PREFIX="/usr/local"
     readonly SOURCE_LIST="/etc/apt/sources.list"
     [[ $(lsb_release --codename) =~ [[:blank:]]([[:alpha:]]+)$ ]]
     readonly CODENAME="${BASH_REMATCH[1]}"
