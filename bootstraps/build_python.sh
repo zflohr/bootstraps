@@ -92,30 +92,54 @@ enable_source_packages() {
     local regexp="deb-src.+${DIST_REPO_URI}/? "
     regexp+="${CODENAME} ([[:alpha:]]* )*main.*"
     local entry=$(grep --perl-regexp --line-number --max-count=1 \
-        "^([[:blank:]]|#)*${regexp}" ${SOURCE_LIST})
-    local -i line_number=$(echo ${entry} | cut --delimiter=: --fields=1)
-    if (( ${line_number} )); then
+        "^([[:blank:]]|#.*)*${regexp}" ${SOURCE_LIST})
+    deb_src_line_number=$(echo ${entry} | cut --delimiter=: --fields=1)
+    if (( ${deb_src_line_number} )); then
         entry=$(echo ${entry} \
             | sed --regexp-extended 's/^[[:digit:]]+:(.*)/\1/')
         if $(echo ${entry} \
                 | grep --perl-regexp --quiet "^[[:blank:]]*#.*${regexp}"); then
             print_source_list_progress "enable deb-src" "${SOURCE_LIST}"
+            deb_src_entry="disabled"
+            deb_src_prefix=$(sed --quiet --regexp-extended \
+                "${deb_src_line_number}s|(.*)${regexp}|\1|p" ${SOURCE_LIST})
             sed --regexp-extended --in-place \
-                "${line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST}
+                "${deb_src_line_number}s|.*(${regexp})|\1|" ${SOURCE_LIST}
         else
             print_source_list_progress "deb-src" "${SOURCE_LIST}"
         fi
     else
         print_source_list_progress "no deb-src" "${SOURCE_LIST}"
+        deb_src_entry="missing"
         regexp=$(echo ${regexp} \
             | sed --regexp-extended 's|deb-src\.\+|deb(\.\+)|')
-        line_number=$(grep --perl-regexp --line-number --max-count=1 \
+        deb_src_line_number=$(grep --perl-regexp --line-number --max-count=1 \
             ".*${regexp}" ${SOURCE_LIST} | cut --delimiter=: --fields=1)
         local -r OPTIONS=$(sed --quiet --regexp-extended \
-            "${line_number}s|.*${regexp}|\1|p" ${SOURCE_LIST})
+            "${deb_src_line_number}s|.*${regexp}|\1|p" ${SOURCE_LIST})
         local -r SOURCE="deb-src${OPTIONS}${DIST_REPO_URI} ${CODENAME} main"
-        sed --in-place "${line_number}a\\${SOURCE}" ${SOURCE_LIST}
+        sed --in-place "${deb_src_line_number}a\\${SOURCE}" ${SOURCE_LIST}
     fi
+}
+
+restore_source_package_settings() {
+    case "${deb_src_entry}" in
+        'enabled')
+            return
+        ;;
+        'disabled')
+            print_source_list_progress "restore deb-src" ${SOURCE_LIST}
+            sed --regexp-extended --in-place \
+                "${deb_src_line_number}s|(.*)|${deb_src_prefix}\1|" \
+                    ${SOURCE_LIST}
+            apt_get
+        ;;
+        'missing')
+            print_source_list_progress "restore deb-src" ${SOURCE_LIST}
+            sed --in-place "$((deb_src_line_number+1))d" ${SOURCE_LIST}
+            apt_get
+        ;;
+    esac
 }
 
 apt_get() {
