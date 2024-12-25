@@ -98,6 +98,16 @@ terminate() {
                     error_msg+="of ${2} source code!\nTerminating..."
                     exit_status=${3}
                 ;;
+                'make')
+                    error_msg="Something went wrong during \"make\"!"
+                    error_msg+="\nTerminating..."
+                    exit_status=${2}
+                ;;
+                'make test')
+                    error_msg="Something went wrong during \"make test\"!"
+                    error_msg+="\nTerminating..."
+                    exit_status=${2}
+                ;;
             esac
         ;;
     esac
