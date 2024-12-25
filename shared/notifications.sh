@@ -155,6 +155,10 @@ print_source_list_progress() {
             progress_msg="No deb-src type entry found in ${2}"
             progress_msg+="\nAdding to fetch source archives..."
         ;;
+        'restore deb-src')
+            progress_msg="Restoring deb-src type entry to "
+            progress_msg+="original state in ${2}"
+        ;;
     esac
     print_message 0 "cyan" "${progress_msg}"
 }
