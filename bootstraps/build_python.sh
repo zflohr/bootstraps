@@ -247,10 +247,13 @@ build_python() {
     (( ${#LLVM_VERSIONS[*]} )) || check_binaries "llvm"
     (( ${#CLANG_VERSIONS[*]} )) || check_binaries "clang"
     check_matching_package_versions
+    local deb_src_prefix deb_src_entry="enabled"
+    local -i deb_src_line_number
     enable_source_packages; apt_get; download_source
-    unset -f enable_source_packages apt_get download_source
+    unset -f enable_source_packages download_source
     cd Python-${PYTHON_VERSION}
-    configure_python
+    configure_python; install_python; cd ..; rm -r Python-${PYTHON_VERSION}
+    restore_source_package_settings
 }
 
 main() {
