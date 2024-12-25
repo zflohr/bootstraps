@@ -34,7 +34,7 @@ USAGE
 }
 
 needed_binaries() {
-    echo "apt-get curl dpkg grep lsb_release sed"
+    echo "apt-get curl dpkg grep lsb_release make sed"
 }
 
 check_binaries() {
