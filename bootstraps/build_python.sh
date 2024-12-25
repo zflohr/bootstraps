@@ -206,8 +206,15 @@ configure_python() {
         LLVM_AR="$(which llvm-ar-${clang_llvm_version})" \
         LLVM_PROFDATA="$(which llvm-profdata-${clang_llvm_version})" \
         ${options[@]} || terminate "configure" "python" $?
-    #make
-    #make test
+}
+
+install_python() {
+    print_build_progress "make" "python"
+    make --silent --jobs=$(nproc) || terminate "make" $?
+    print_build_progress "make test"
+    make --silent test || terminate "make test" $?
+    print_build_progress "make altinstall" "${PREFIX}/"
+    make --silent altinstall
 }
 
 binary_search() {
