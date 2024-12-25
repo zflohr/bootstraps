@@ -191,6 +191,16 @@ print_build_progress() {
         'configure')
             progress_msg="Running configuration script for ${2} source code..."
         ;;
+        'make')
+            progress_msg="Running GNU \"make\" to build ${2} executable "
+            progress_msg+="and extension modules..."
+        ;;
+        'make test')
+            progress_msg="Running Makefile test suite..."
+        ;;
+        'make altinstall')
+            progress_msg="Installing built files in ${2}"
+        ;;
     esac
     print_message 0 "cyan" "${progress_msg}"
 }
