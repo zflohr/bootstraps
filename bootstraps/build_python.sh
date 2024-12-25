@@ -190,8 +190,8 @@ download_source() {
 
 configure_python() {
     local -a options=(
-        --prefix=/usr/local
-        --exec-prefix=/usr/local
+        --prefix=${PREFIX}
+        --exec-prefix=${PREFIX}
         --with-ensurepip=upgrade
         --enable-optimizations
         --with-lto=thin)
