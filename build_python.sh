@@ -257,8 +257,8 @@ build_python() {
 }
 
 main() {
-    . ../shared/notifications.sh; check_binaries $(needed_binaries)
-    . ../shared/parameters.sh; check_binaries $(needed_binaries)
+    . shared/notifications.sh; check_binaries $(needed_binaries)
+    . shared/parameters.sh; check_binaries $(needed_binaries)
     check_distributor_id; define_constants; parse_bootstrap_params $* "usage"
     unset_parameters_module; check_root_user
     unset -f check_distributor_id check_root_user define_constants usage

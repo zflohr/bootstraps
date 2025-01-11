@@ -141,8 +141,8 @@ purge_llvm() {
 }
 
 main() {
-    . ../shared/notifications.sh; check_binaries $(needed_binaries)
-    . ../shared/parameters.sh; check_binaries $(needed_binaries)
+    . shared/notifications.sh; check_binaries $(needed_binaries)
+    . shared/parameters.sh; check_binaries $(needed_binaries)
     parse_bootstrap_params $* "usage"; unset_parameters_module
     check_root_user; define_constants
     unset -f usage check_binaries define_constants check_root_user
