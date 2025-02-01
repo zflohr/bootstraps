@@ -89,10 +89,6 @@ terminate() {
         ;;
         *)
             case "${1}" in
-                'git')
-                    error_msg="\"git ${2}\" failed!\nTerminating..."
-                    exit_status=${3}
-                ;;
                 'configure')
                     error_msg="Something went wrong during the configuration "
                     error_msg+="of ${2} source code!\nTerminating..."
