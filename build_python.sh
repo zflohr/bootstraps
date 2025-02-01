@@ -1,4 +1,3 @@
-#lala
 #!/usr/bin/env bash
 #
 # Author: Zachary Flohr

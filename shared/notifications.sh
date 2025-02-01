@@ -1,4 +1,3 @@
-#lala
 # Author: Zachary Flohr
 #
 # Functions for printing terminal-dependent messages and for shell
